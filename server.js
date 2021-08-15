@@ -4,7 +4,10 @@ const cors = require('cors');//middleware
 const { v4: uuidv4 } = require('uuid');//used to create better id
 const pool = require('./db')//get the db connection file;
 const Joi = require('joi');//joi to do authentication
-const socket = require('socket.io');// ini socket || continues on line 98
+// const SocketServer = require('./SocketServer');
+
+const socket = require('socket.io');
+
 
 app.use(express.json());
 app.use(cors());
@@ -55,7 +58,7 @@ app.post('/users/register', async (req,res)=>{
     try {
         const {fname,lname,email,password} = req.body;
         console.log(fname,lname);
-        const newUser = await pool.query(`INSERT INTO users (id,fname,lname,email,password) values($1,$2,$4,$5)`,
+        const newUser = await pool.query(`INSERT INTO users (id,fname,lname,email,password) values($1,$2,$3,$4,$5)`,
         [uuidv4(),fname,lname,email,password]);
         res.json('uRs-01');
     } catch (err) {
@@ -94,19 +97,4 @@ app.get('/users/:id/:name',(req,res)=>{
     res.send(req.params);
 })
 
-app.listen(PORT,()=>console.log('server started on port ' + PORT));
-
-// init socket server 
-const socketServer = express();
-const server = socketServer.listen(5001,()=>{console.log('socket server rolling')})
-//create connection to socket
-io = socket(server);
-
-//setup
-io.on('connection', (socket)=>{
-    
-    //manage disconnections
-    socket.on('disconnect',()=>{
-
-    });
-});
+const server = app.listen(PORT,()=>console.log('server started on port ' + PORT));
