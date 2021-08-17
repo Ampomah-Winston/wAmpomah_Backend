@@ -116,7 +116,7 @@ app.put('/users/:id', async (req,res)=>{
             }).catch(e => console.error(e.stack))        
     });
 
-    //get the list of groups a user belongs || the user will pass 
+    //get the list of groups a user belongs | the user will pass 
     //his id through a post request body
     app.post('/chatGroup/myGroups', async (req,res)=>{
         console.log(req.body);
@@ -126,6 +126,20 @@ app.put('/users/:id', async (req,res)=>{
         const {rows} =  await pool.query(sql,[userID])
         res.json(rows);
     })
+    //create a new chat with, to set an id, we combine init id and co_op id
+    app.post('/singlechat/create', async (req,res)=>{
+        try {
+            const {init_id,coop_id} = req.body
+            console.log('body ',init_id,coop_id)
+            // const chatid = uuid();
+            let sql = `INSERT INTO singlechat (init_id,coop_id) values ($1,$2) RETURNING * `;                        
+            const {rows} = await pool.query(sql,[init_id,coop_id])            
+            res.json(rows)
+        } catch (err) {
+            res.send(err )
+        }
+    })
+
 /**
  * socket
  */
