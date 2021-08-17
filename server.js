@@ -39,14 +39,13 @@ app.get('/users', async (req,res)=>{
 });
 
 //get a single user
-app.get('/users/:value', async (req,res)=>{
+app.get('/users/search/:value', async (req,res)=>{
     try {
+        // console.log(reg)
         const {value} = req.params;
-        console.log(value);
-       const {rows} = await pool.query(`select * from users where lname like '%${value}%' or 
-        email like '%${value}%' or id like '%${value}%'`);
-       res.json(rows);
-      
+        console.log(req.params);
+       const {rows} = await pool.query(`select * from users where lname like '%${value}%' or email like '%${value}%' or id like '%${value}%'`);
+       res.json(rows);      
     } catch (err) {
         console.log(err)
     }
@@ -93,8 +92,42 @@ app.put('/users/:id', async (req,res)=>{
     }
 });
 
-app.get('/users/:id/:name',(req,res)=>{
-    res.send(req.params);
-})
+/**
+ * @{socket Database setup below}
+ */
+//this post request creates an new group with it participants
+//utilizies two tables chatgroup (does a single query) and
+//chat_participants
+    app.post('/chatGroup/createGroup', async (req,res)=>{
+        const {group_data,content} = req.body;
+        const group_id = uuidv4();
+        let sql = `INSERT INTO chatgroup (group_id,group_name,group_owner) values($1,$2,$3) RETURNING *`;
+        await pool.query(sql,[group_id,group_data.group_name,group_data.group_owner]).
+            then((res)=>{
+                 content.forEach(user => {
+                        sql = `INSERT INTO group_participants(group_id,user_id) 
+                             values($1,$2)`;
+                         pool.query(sql,[group_id,user.id]);
+                        console.log(user)
+                    });
+            }).then(()=>{
+                res.send(`${group_data.group_name} created successfully`)
+                console.log('hello you added participants')
+            }).catch(e => console.error(e.stack))        
+    });
+
+    //get the list of groups a user belongs || the user will pass 
+    //his id through a post request body
+    app.post('/chatGroup/myGroups', async (req,res)=>{
+        console.log(req.body);
+        const {userID} = req.body;
+        let sql = `select chatgroup.group_name,chatgroup.group_id from chatgroup inner join group_participants	on chatgroup.group_id = group_participants.group_id
+	    where group_participants.user_id = $1`;
+        const {rows} =  await pool.query(sql,[userID])
+        res.json(rows);
+    })
+/**
+ * socket
+ */
 
 const server = app.listen(PORT,()=>console.log('server started on port ' + PORT));
