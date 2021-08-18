@@ -53,10 +53,8 @@ app.get('/users/search/:value', async (req,res)=>{
 
 //insert users
 app.post('/users/register', async (req,res)=>{
-    //await
     try {
         const {fname,lname,email,password} = req.body;
-        console.log(fname,lname);
         const newUser = await pool.query(`INSERT INTO users (id,fname,lname,email,password) values($1,$2,$3,$4,$5)`,
         [uuidv4(),fname,lname,email,password]);
         res.json('uRs-01');
@@ -92,6 +90,18 @@ app.put('/users/:id', async (req,res)=>{
     }
 });
 
+app.post('/users/id', async (req,res)=>{
+    try {
+        let {id} = req.body;
+        id = id.trim().toString();
+        console.log('=> ', id)
+        let sql = `SELECT * from USERS where id = '${id}' `;
+        const {rows} = await pool.query(sql);
+        res.send(rows)   
+    } catch (error) {
+        console.log(error);
+    } 
+});
 /**
  * @{socket Database setup below}
  */
@@ -130,10 +140,11 @@ app.put('/users/:id', async (req,res)=>{
     app.post('/singlechat/create', async (req,res)=>{
         try {
             const {init_id,coop_id} = req.body
-            console.log('body ',init_id,coop_id)
+            // console.log('body ',init_id,coop_id)
             // const chatid = uuid();
             let sql = `INSERT INTO singlechat (init_id,coop_id) values ($1,$2) RETURNING * `;                        
             const {rows} = await pool.query(sql,[init_id,coop_id])            
+            // console.log(rows)
             res.json(rows)
         } catch (err) {
             res.send(err )
