@@ -4,9 +4,10 @@ const cors = require('cors');//middleware
 const { v4: uuidv4 } = require('uuid');//used to create better id
 const pool = require('./db')//get the db connection file;
 const Joi = require('joi');//joi to do authentication
-// const SocketServer = require('./SocketServer');
+const Axios = require('axios')
 
 const socket = require('socket.io');
+const { json } = require('express');
 
 
 app.use(express.json());
@@ -89,7 +90,7 @@ app.put('/users/:id', async (req,res)=>{
         console.log(error)
     }
 });
-
+//get a single user || use here when a user 
 app.post('/users/id', async (req,res)=>{
     try {
         let {id} = req.body;
@@ -137,18 +138,66 @@ app.post('/users/id', async (req,res)=>{
         res.json(rows);
     })
     //create a new chat with, to set an id, we combine init id and co_op id
+    //OOhhh noooo! 
+    //instead i have to check for previous involvemnet between the two
+    //if there exist, then we tell the user about their history with their coop
+    // by responding with the previous chatid and the coop_id 
+    // else we go ahead and create the conversation
     app.post('/singlechat/create', async (req,res)=>{
         try {
             const {init_id,coop_id} = req.body
-            // console.log('body ',init_id,coop_id)
-            // const chatid = uuid();
-            let sql = `INSERT INTO singlechat (init_id,coop_id) values ($1,$2) RETURNING * `;                        
-            const {rows} = await pool.query(sql,[init_id,coop_id])            
+            let sql = 
+            `select * from singlechat 
+                where (
+                    init_id = '${init_id}' or
+                    coop_id = '${init_id}'
+                ) and (
+                    init_id = '${coop_id}' or
+                    coop_id = '${coop_id}'
+                )`;
+            let {rows} = await pool.query(sql)
             // console.log(rows)
-            res.json(rows)
+                if(rows[0]){
+                    res.json(rows)
+                    console.log(rows)
+                    console.log("has history")
+                }else{
+                    sql = `INSERT INTO singlechat (init_id,coop_id) values ($1,$2) RETURNING * `;                        
+                    const {rows} = await pool.query(sql,[init_id,coop_id])            
+                    console.log(rows)
+                    res.json(rows)
+                }
+
         } catch (err) {
             res.send(err )
         }
+    })
+
+
+    let buttData;
+    function getSing(id){  
+        Axios.post('http://localhost:5000/users/id',{
+             user_id : id
+        }).then(res=>{
+            console.log(res)
+            return res;
+        })       
+    }
+
+    //get a chatid
+    app.post('/singlechat/getAll',async(req,res)=>{
+        const {userID} = req.body;
+        let sql = `
+        select singlechat.* from singlechat
+        inner join users
+            on singlechat.init_id = users.id
+            where singlechat.init_id = '${userID}'
+            or singlechat.coop_id = '${userID}'`
+            let {rows} =  await pool.query(sql)
+            //we have receive the users chat list but no names
+            //let's get the corresponding names frow the list
+            res.send(rows);
+            
     })
 
 /**
