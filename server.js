@@ -56,11 +56,33 @@ app.get('/users/search/:value', async (req,res)=>{
 app.post('/users/register', async (req,res)=>{
     try {
         const {fname,lname,email,password} = req.body;
-        const newUser = await pool.query(`INSERT INTO users (id,fname,lname,email,password) values($1,$2,$3,$4,$5)`,
+        const newUser = await pool.query(`INSERT INTO users (id,fname,lname,email,password) values($1,$2,$3,$4,$5) RETURNING *`,
         [uuidv4(),fname,lname,email,password]);
-        res.json('uRs-01');
+        res.json(newUser.rows);
     } catch (err) {
         res.send(err.message);
+    }
+});
+
+//insert users
+app.post('/users/register/google', async (req,res)=>{
+    try {
+        const {googleid,fname,lname,email} = req.body.userobj;
+        const newUser = await pool.query(`INSERT INTO users (id,fname,lname,email,password) values($1,$2,$3,$4,$5) RETURNING *`,
+        [googleid,fname,lname,email,'password8']);
+        if(newUser.rows){
+             res.json(newUser.rows);
+        }       
+    } catch (err) {
+        if(err.code === 23505){
+            // const {rows} = await pool.query(`select * from users where id = $1`,[googleid])
+            // res.send(rows);
+            console.log('user preexit')
+
+        }
+        console.log(err)
+        res.send(err);
+        
     }
 });
 
