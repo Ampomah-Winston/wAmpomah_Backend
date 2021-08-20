@@ -3,16 +3,10 @@ const app = express();// init express as app
 const cors = require('cors');//middleware
 const { v4: uuidv4 } = require('uuid');//used to create better id
 const pool = require('./db')//get the db connection file;
-const Joi = require('joi');//joi to do authentication
 const Axios = require('axios')
-
-const socket = require('socket.io');
-const { json } = require('express');
-
 
 app.use(express.json());
 app.use(cors());
-
 
 const PORT = 5000 || process.env.PORT;
 
@@ -218,12 +212,7 @@ app.post('/users/id', async (req,res)=>{
             let {rows} =  await pool.query(sql)
             //we have receive the users chat list but no names
             //let's get the corresponding names frow the list
-            res.send(rows);
-            
+            res.send(rows);            
     })
-
-/**
- * socket
- */
 
 const server = app.listen(PORT,()=>console.log('server started on port ' + PORT));

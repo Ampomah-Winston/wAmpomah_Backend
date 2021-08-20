@@ -49,13 +49,13 @@ class SocketServer{
             socket.on('join_room', data=>{ 
                 socket.join(data.group);
                 console.log('time -> ',data.time);
-                socket.to(data.group).emit('groupResponse', {
-                    composer: 'ServerCom',
-                    title:'groupResponse',
-                    dir:'out',
-                    msg:`${data.author} has joined Linkers!`,
-                    time: data.time ? data.time : '00:00:00'
-                });
+                // socket.to(data.group).emit('groupResponse', {
+                //     composer: 'ServerCom',
+                //     title:'groupResponse',
+                //     dir:'out',
+                //     msg:`${data.author} has joined ${data.group}!`,
+                //     time: data.time ? data.time : '00:00:00'
+                // });
             });
 
             //receive message to room
@@ -69,7 +69,7 @@ class SocketServer{
                     time: data.time ? data.time : '00:00:00'
                 });
             })
-/////////////////////
+            /////////////////////
             socket.on('flapMessage',data=>{
                 data.dir = "out"
                 socket.emit('flapMessage', data);
@@ -79,12 +79,12 @@ class SocketServer{
             // runs when a user disconnects
             socket.on('disconnect',socket=>{
                 console.log('a user disconnected');
-                IO.emit('ServerCom', {
-                    composer: 'ServerCom',
-                    title:'Disconnection',
-                    dir:'in',
-                    msg:'User disconnected'
-                })
+                // IO.emit('ServerCom', {
+                //     composer: 'ServerCom',
+                //     title:'Disconnection',
+                //     dir:'in',
+                //     msg:'User disconnected'
+                // })
             })
         })
     }
